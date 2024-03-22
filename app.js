@@ -83,4 +83,4 @@ document.getElementById('next').addEventListener('click', nextQuestion);
 window.onload = function() {
     fetchQuizData();
 };
- 
+}
