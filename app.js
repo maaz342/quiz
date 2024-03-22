@@ -1,122 +1,86 @@
 // Step 1: Define Quiz Data
+const firebaseConfig = {
+  apiKey: "AIzaSyDyAF1DHvKytYJH4yNenHuOVB0CALBebW8",
+  authDomain: "quiz-app-87228.firebaseapp.com",
+  projectId: "quiz-app-87228",
+  storageBucket: "quiz-app-87228.appspot.com",
+  messagingSenderId: "333162492360",
+  databaseURL:"https://quiz-app-87228-default-rtdb.firebaseio.com/",
+  appId: "1:333162492360:web:679e3ebab084ecc3da10fd",
+  measurementId: "G-981FL4NLV4"
+};
+firebase.initializeApp(firebaseConfig);
 
-const quizData  = [
-    {
-        question:"Html Stands For _________",
-        options: ["Hyper Text Makeup Language",
-        "html",
-        "Case Cading Style Sheet",
-        "Hypertext markup language"
-        ],
-        correctAns: 3,
-    },
-    {
-        question:"Css Stands For __________",
-        options: [
-            "Casecading Style Sheet",
-            "Java",
-            "Ram",
-            "Hypertext markup language"
-        ],
-        correctAns: 0,
-    },
-    {
-        question:"Js Stands For  _________",
-        options: [
-            "Java Style",
-            "Java Script",
-            "Script",
-            "Script Src"
-        ],
-        correctAns: 1,
-    },
-    {
-        question:"Dom Stands For  _________",
-        options: [
-            "Document Object Model",
-            "html",
-            "Css",
-            "Java"
-        ],
-        correctAns: 0,
-    },
-    {
-        question:"Ram Stands For _________",
-        options: [
-            "Read Only Memory",
-            "Dom",
-            "Random Acccess Memory",
-            "For Pc"
-        ],
-        correctAns: 2,
-    },
-    {
-        question:"Rom Stands For  _________",
-        options: [
-            "Hyper Text Markup Language",
-            "html",
-            "HTml",
-            "Read Only Memory"
-        ],
-        correctAns: 3,
-    },
-];
-  
-  //? Step 2: JavaScript Initialization
-  
-  const answersElem = document.querySelectorAll(".answer");
-  console.log(answersElem);
-  const [questionElem, option_1, option_2, option_3, option_4] =
-    document.querySelectorAll(
-      "#question, #option_1, #option_2, #option_3, #option_4"
-    );
-  // console.log(option_2);
-  const submitBtn = document.getElementById("submit");
-  
-  let currentQuiz = 0;
-  let score = 0;
-  
-  const loadQuiz = () => {
-    const { question, options } = quizData[currentQuiz];
-  
-    questionElem.innerText = `${currentQuiz + 1}: ${question}`;
-    options.forEach((curOption, index) => {
-      return (window[`option_${index + 1}`].innerText = curOption);
+// Get a reference to the database service
+const database = firebase.database();
+
+let currentQuestionIndex = 0;
+let quizData = [];
+let score = 0; // Declare score outside of the function
+
+
+// Function to fetch quiz data from Firebase database
+function fetchQuizData() {
+    const quizRef = database.ref('quizData');
+    quizRef.once('value', function(snapshot) {
+        snapshot.forEach(function(childSnapshot) {
+            const question = childSnapshot.val();
+            quizData.push(question);
+        });
+        displayQuestion();
     });
-  };
-  
-  loadQuiz();
-  
-  
-  const getSelected = () => {
-    const answerElement = Array.from(answersElem);
-    return answerElement.findIndex((curOption) => curOption.checked);
-  };
-  
-  const deselectAnswers = () => {
-    answersElem.forEach((curElem) => (curElem.checked = false));
-  };
-  
-  submitBtn.addEventListener("click", () => {
-    const selectedOptionIndex = getSelected();
-    console.log(selectedOptionIndex);
-  
-    if (selectedOptionIndex === quizData[currentQuiz].correctAns) {
-      score = score + 1;
-    }
-  
-    currentQuiz++;
-  
-    if (currentQuiz < quizData.length) {
-      deselectAnswers();
-      loadQuiz();
-    } else {
-      quiz.innerHTML = `
-      <div class="result">
-      <h2>🏆 Your Score: ${score}/${quizData.length} Correct Answers</h2>
-      <p>Congratulations on completing the quiz! 🎉</p>
-      <button type="submit" class="reload-button btn btn-primary" onclick="location.reload()">Play Again 🔄</button>
-      </div>
-    `;
-    }
-  });
+}
+
+// Function to display quiz question and options
+function displayQuestion() {
+    const question = quizData[currentQuestionIndex];
+    const questionElement = document.getElementById('question');
+    const optionsElement = document.getElementById('options');
+    questionElement.innerText = question.question;
+    optionsElement.innerHTML = '';
+    question.options.forEach((option, index) => {
+        const listItem = document.createElement('li');
+        listItem.innerHTML = `
+            <input type="radio" name="answer" id="option_${index + 1}" class="answer" value="${index}">
+            <label for="option_${index + 1}" id="option_${index + 1}_label">${option}</label>
+        `;
+        optionsElement.appendChild(listItem);
+    });
+}
+
+function nextQuestion() {
+  const selectedAnswerIndex = document.querySelector('input[name="answer"]:checked');
+  if (!selectedAnswerIndex) {
+      alert('Please select an answer before proceeding.');
+      return;
+  }
+
+  const selectedAnswer = parseInt(selectedAnswerIndex.value);
+
+  const correctAnswerIndex = quizData[currentQuestionIndex].correctAns;
+
+  if (selectedAnswer === correctAnswerIndex) {
+      score++; 
+
+  currentQuestionIndex++;
+  if (currentQuestionIndex < quizData.length) {
+      displayQuestion();
+  } else {
+      displayResult();
+  }
+}
+
+function displayResult() {
+  document.getElementById('quiz').style.display = 'none';
+
+  const resultElement = document.getElementById('result');
+  resultElement.innerText = `Your score: ${score} out of ${quizData.length}`;
+  resultElement.style.display = 'block';
+}
+
+document.getElementById('next').addEventListener('click', nextQuestion);
+
+window.onload = function() {
+    fetchQuizData();
+};
+ 

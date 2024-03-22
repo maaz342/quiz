@@ -7,15 +7,6 @@
     border-radius: 4px;
     background-color: cyan;
 }
-body {
-    background-image: url('https://img.freepik.com/premium-photo/blue-question-mark-random-pattern-background-illustration_103740-566.jpg');
-    background-size: cover;
-    background-position: center;
-    height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
 .options {
     display: flex;
     flex-wrap: wrap;
